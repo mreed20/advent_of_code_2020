@@ -5,6 +5,7 @@
 
 import qualified Data.Set as S
 import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import Control.Arrow ( (>>>) )
 
 -- key in a passport
@@ -37,24 +38,22 @@ passportValid p = let requiredKeys = S.fromList [Byr, Iyr, Eyr, Hgt, Hcl, Ecl, P
                   in requiredKeys `S.isSubsetOf` p
 
 -- Parse a passport string.
-parsePassport :: String -> Passport
-parsePassport = words >>> map extractKey >>> map pRead >>> S.fromList
+parsePassport :: T.Text -> Passport
+parsePassport = T.words >>> map (extractKey >>> T.toTitle >>> T.unpack >>> kRead) >>> S.fromList
   where 
-    -- We upper case the first letter so the derived Read instance works.
-    pRead :: String -> Key 
-    pRead = read . T.unpack . T.toTitle . T.pack
+    -- read in a key
+    kRead = read :: String -> Key 
     -- Return just the key part in a string of the form "key:value".
-    extractKey :: String -> String
-    extractKey = takeWhile (/= ':')
+    extractKey = T.takeWhile (/= ':')
 
 -- Read all passports from the given file path.
 readPassports :: FilePath -> IO [Passport]
 readPassports path = do
-  s <- readFile path
+  s <- T.readFile path
   -- split on two consecutive newlines
-  let ss = T.splitOn "\n\n" (T.pack s)
+  let ss = T.splitOn "\n\n" s
   -- remove newlines within each passport
-  let ss' = map (T.unpack . T.replace "\n" " ") ss
+  let ss' = map (T.replace "\n" " ") ss
   -- Map each String to a Passport, which is just a Set of Keys.
   -- This makes it much more pleasant to process passports than if
   -- they were strings. Inspired by Lexi Lambda's blog post,
