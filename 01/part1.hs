@@ -5,7 +5,7 @@ main :: IO ()
 main = do
     numbers <- fileToInts "input"
     case findPairThatSumsTo2020 numbers of
-      Just (x, y) -> putStrLn . show $ x * y
+      Just (x, y) -> print $ x * y
       Nothing     -> putStrLn "oh no"
 
 findPairThatSumsTo2020 :: [Int] -> Maybe (Int, Int)
