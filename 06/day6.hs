@@ -6,25 +6,14 @@ import qualified Data.Text.IO as T
 
 main :: IO ()
 main = do
-  n <- part1
-  print $ "part 1: " ++ show n
-  m <- part2
-  print $ "part 2: " ++ show m
-
-part1 :: IO Int
-part1 = do
   groups <- readGroups "input.txt"
-  let sizes = map groupSize groups
-  return $ sum sizes
+  let n = sum $ map groupSize groups
+  print $ "part 1: " ++ show n
+  let m = sum $ map groupSize2 groups
+  print $ "part 2: " ++ show m
 
 groupSize :: T.Text -> Int
 groupSize = S.size . S.delete '\n' . S.fromList . T.unpack
-
-part2 :: IO Int
-part2 = do
-  groups <- readGroups "input.txt"
-  let sizes = map groupSize2 groups
-  return $ sum sizes
 
 groupSize2 :: T.Text -> Int
 groupSize2 g =
