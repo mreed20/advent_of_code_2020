@@ -26,19 +26,20 @@ import Text.Parsec as P
     try,
     (<|>),
   )
-import Text.Parsec.Text (Parser)
 import Text.Parsec.Perm
+import Text.Parsec.Text (Parser)
 
-data Passport = Passport {
-   getByr :: Int,
-   getIyr :: Int,
-   getEyr :: Int,
-   getHgt :: Hgt,
-   getHcl :: String,
-   getEcl :: EyeColor,
-   getPid :: String,
-   getCid :: Int
-} deriving (Show)
+data Passport = Passport
+  { getByr :: Int,
+    getIyr :: Int,
+    getEyr :: Int,
+    getHgt :: Hgt,
+    getHcl :: String,
+    getEcl :: EyeColor,
+    getPid :: String,
+    getCid :: Int
+  }
+  deriving (Show)
 
 -- Height field of passport.
 data Hgt = Hgt Int LengthUnit deriving (Show)
@@ -48,7 +49,7 @@ data LengthUnit = Cm | In deriving (Show)
 
 -- Eye color in a passport
 data EyeColor = Amb | Blu | Brn | Gry | Grn | Hzl | Oth
-                deriving (Show)
+  deriving (Show)
 
 main :: IO ()
 main = do
@@ -62,14 +63,16 @@ main = do
 
 -- Parse a passport.
 passport :: Parser Passport
-passport = permute $ Passport <$$> try byr
-                              <||> try iyr
-                              <||> try eyr
-                              <||> try hgt
-                              <||> try hcl
-                              <||> try ecl
-                              <||> try pid
-                              <|?> (0, try cid)
+passport =
+  permute $
+    Passport <$$> try byr
+      <||> try iyr
+      <||> try eyr
+      <||> try hgt
+      <||> try hcl
+      <||> try ecl
+      <||> try pid
+      <|?> (0, try cid)
 
 readLines :: FilePath -> IO [T.Text]
 readLines path = do
@@ -112,26 +115,34 @@ hgt = do
 -- hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
 hcl :: Parser String
 hcl = passportKey "hcl" hairColor
-      where hairColor = char '#' *> count 6 (oneOf ['a'..'f'] <|> digit)
+  where
+    hairColor = char '#' *> count 6 (oneOf ['a' .. 'f'] <|> digit)
 
 -- ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
 ecl :: Parser EyeColor
 ecl = passportKey "ecl" eyeColor
-      where eyeColor = choice $ map try [string "amb" $> Amb,
-                               string "blu" $> Blu,
-                               string "brn" $> Brn,
-                               string "gry" $> Gry,
-                               string "grn" $> Grn,
-                               string "hzl" $> Hzl,
-                               string "oth" $> Oth]
+  where
+    eyeColor =
+      choice $
+        map
+          try
+          [ string "amb" $> Amb,
+            string "blu" $> Blu,
+            string "brn" $> Brn,
+            string "gry" $> Gry,
+            string "grn" $> Grn,
+            string "hzl" $> Hzl,
+            string "oth" $> Oth
+          ]
 
 -- pid (Passport ID) - a nine-digit number, including leading zeroes.
 pid :: Parser String
 pid = passportKey "pid" nineDigitNumber
-      where nineDigitNumber = do
-              v <- count 9 digit 
-              notFollowedBy digit
-              return v
+  where
+    nineDigitNumber = do
+      v <- count 9 digit
+      notFollowedBy digit
+      return v
 
 -- Parse a key-value pair of the form "ks:value" into a value.
 passportKey :: String -> Parser a -> Parser a
