@@ -52,14 +52,16 @@ part1 bags =
 part2 :: [Bag] -> Maybe Int
 part2 bags = do
   start <- lookup "shiny gold" bags
-  return $ follow start bags
+  follow start bags
 
 -- Wow this took WAY too long to figure out.
-follow :: [(String, Int)] -> [Bag] -> Int
-follow [] _ = 0
-follow ((cName, cCount) : cs) bags = cCount + cCount * follow childBag bags + follow cs bags
-  where
-    childBag = fromJust $ lookup cName bags
+follow :: [(String, Int)] -> [Bag] -> Maybe Int
+follow [] _ = return 0
+follow ((cName, cCount) : cs) bags = do
+  childBag <- lookup cName bags
+  first <- follow childBag bags
+  rest <- follow cs bags
+  return $ cCount + cCount * first + rest
 
 bag :: Parser Bag
 bag = do
