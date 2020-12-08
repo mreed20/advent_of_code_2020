@@ -2,12 +2,10 @@
 
 module Day7 where
 
--- TODO: use Text.Parsec.Token
-
 import Data.Char (digitToInt)
-import Data.List ( delete )
+import Data.List (find,  delete )
 import Data.Functor (($>))
-import Data.Graph (graphFromEdges, path, vertices)
+import Data.Graph (graphFromEdges, path)
 import Data.Maybe (fromJust)
 import Text.Parsec
   ( digit,
@@ -23,10 +21,7 @@ import Text.Parsec
 import Text.Parsec.String (Parser)
 
 -- A Bag has a color and a list of bag names (and their quantity) it can contain.
-data Bag = Bag {
-  bagColor :: String,
-  bagContents :: [(String, Int)]
-} deriving (Show)
+type Bag = (String, [(String, Int)])
 
 main :: IO ()
 main = do
@@ -41,21 +36,38 @@ main = do
       putStrLn $ "part 1: " ++ show (part1 bags)
       putStrLn $ "part 2: " ++ show (part2 bags)
 
--- represent the bags as a graph
+-- represent the bags as a directed graph
 part1 :: [Bag] -> Int
 part1 bags =
-  let bagToEdge (Bag color childBags) = (color, color, map fst childBags)
+  let bagToEdge (color, childBags) = (color, color, map fst childBags)
       -- build a directed graph from the list of bags
       (graph, _, vertexFromKey) = graphFromEdges (map bagToEdge bags)
       -- makes it more convenient to get keys
       getKey k = fromJust $ vertexFromKey k
       -- can the given key reach the gold vertex?
       canReachGold k = path graph (getKey k) (getKey "shiny gold")
-      keys = "shiny gold" `delete` map bagColor bags
+      keys = "shiny gold" `delete` map fst bags
    in length . filter canReachGold $ keys
 
+
+findBag :: (Foldable t, Eq a) => a -> t (a, b) -> (a, b)
+findBag name bags = fromJust $ find (\(x, _) -> x == name) bags
+
 part2 :: [Bag] -> Int
-part2 = undefined
+part2 bags = let start = findBag "shiny gold" bags
+             in follow start bags
+
+-- Wow this took WAY too long to figure out.
+follow :: Bag -> [Bag] -> Int
+follow (_, []) _ = 0
+follow (_, ((cName, cCount):cs)) bags = cCount + cCount * follow childBag bags + follow ("", cs) bags
+  where childBag = findBag cName bags
+
+
+
+
+
+
 
 bag :: Parser Bag
 bag = do
@@ -64,7 +76,7 @@ bag = do
   token "contain"
   childColors <- (try (string "no other bags") $> []) <|> childBags
   token "."
-  return $ Bag c childColors
+  return $ (c, childColors)
 
 childBags :: Parser [(String, Int)]
 childBags =
