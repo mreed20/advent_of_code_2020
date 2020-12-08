@@ -22,9 +22,11 @@ import Text.Parsec
   )
 import Text.Parsec.String (Parser)
 
--- A Bag has a color and can contain 1 or more other types of Bags.
-
-type Bag = (String, [String])
+-- A Bag has a color and a list of bag names (and their quantity) it can contain.
+data Bag = Bag {
+  bagColor :: String,
+  bagContents :: [(String, Int)]
+} deriving (Show)
 
 main :: IO ()
 main = do
@@ -35,21 +37,25 @@ main = do
   case mapM (parse bag "") (lines input) of
     Left x ->
       print x
-    Right bags ->
+    Right bags -> do
       putStrLn $ "part 1: " ++ show (part1 bags)
+      putStrLn $ "part 2: " ++ show (part2 bags)
 
 -- represent the bags as a graph
 part1 :: [Bag] -> Int
 part1 bags =
-  let bagToEdge (color, childBags) = (color, color, childBags)
+  let bagToEdge (Bag color childBags) = (color, color, map fst childBags)
       -- build a directed graph from the list of bags
       (graph, _, vertexFromKey) = graphFromEdges (map bagToEdge bags)
       -- makes it more convenient to get keys
       getKey k = fromJust $ vertexFromKey k
       -- can the given key reach the gold vertex?
       canReachGold k = path graph (getKey k) (getKey "shiny gold")
-      keys = "shiny gold" `delete` map fst bags 
+      keys = "shiny gold" `delete` map bagColor bags
    in length . filter canReachGold $ keys
+
+part2 :: [Bag] -> Int
+part2 = undefined
 
 bag :: Parser Bag
 bag = do
@@ -58,15 +64,15 @@ bag = do
   token "contain"
   childColors <- (try (string "no other bags") $> []) <|> childBags
   token "."
-  return (c, childColors)
+  return $ Bag c childColors
 
-childBags :: Parser [String]
+childBags :: Parser [(String, Int)]
 childBags =
   ( do
-      number
+      n <- number
       c <- color
       try (token "bags") <|> try (token "bag")
-      return c
+      return (c, n)
   )
     `sepBy` token ","
 
