@@ -57,11 +57,12 @@ part2 bags = do
 -- Wow this took WAY too long to figure out.
 follow :: [(String, Int)] -> [Bag] -> Maybe Int
 follow [] _ = return 0
-follow ((cName, cCount) : cs) bags = do
-  childBag <- lookup cName bags
-  first <- follow childBag bags
-  rest <- follow cs bags
-  return $ cCount + cCount * first + rest
+follow cs bags = do
+  let recurse (name, c) = do {b <- lookup name bags;
+                              r <- follow b bags;
+                              return $ c + c * r}
+  x <- mapM recurse cs
+  return $ sum x
 
 bag :: Parser Bag
 bag = do
