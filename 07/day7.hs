@@ -5,6 +5,7 @@ module Day7 where
 -- TODO: use Text.Parsec.Token
 
 import Data.Char (digitToInt)
+import Data.List ( delete )
 import Data.Functor (($>))
 import Data.Graph (graphFromEdges, path, vertices)
 import Data.Maybe (fromJust)
@@ -41,12 +42,14 @@ main = do
 part1 :: [Bag] -> Int
 part1 bags =
   let bagToEdge (color, childBags) = (color, color, childBags)
+      -- build a directed graph from the list of bags
       (graph, _, vertexFromKey) = graphFromEdges (map bagToEdge bags)
-      goldVertex = fromJust $ vertexFromKey "shiny gold"
-      -- get all the vertices in the graph that aren't shiny gold
-      vs = filter (/= goldVertex) $ vertices graph
-      canReachGold v = path graph v goldVertex
-   in length . map canReachGold $ vs
+      -- makes it more convenient to get keys
+      getKey k = fromJust $ vertexFromKey k
+      -- can the given key reach the gold vertex?
+      canReachGold k = path graph (getKey k) (getKey "shiny gold")
+      keys = "shiny gold" `delete` map fst bags 
+   in length . filter canReachGold $ keys
 
 bag :: Parser Bag
 bag = do
