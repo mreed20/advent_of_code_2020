@@ -3,9 +3,9 @@
 module Day7 where
 
 import Data.Char (digitToInt)
-import Data.List (find,  delete )
 import Data.Functor (($>))
 import Data.Graph (graphFromEdges, path)
+import Data.List (delete, find)
 import Data.Maybe (fromJust)
 import Text.Parsec
   ( digit,
@@ -49,25 +49,20 @@ part1 bags =
       keys = "shiny gold" `delete` map fst bags
    in length . filter canReachGold $ keys
 
-
 findBag :: (Foldable t, Eq a) => a -> t (a, b) -> (a, b)
 findBag name bags = fromJust $ find (\(x, _) -> x == name) bags
 
 part2 :: [Bag] -> Int
-part2 bags = let start = findBag "shiny gold" bags
-             in follow start bags
+part2 bags =
+  let start = fromJust $ lookup "shiny gold" bags
+   in follow start bags
 
 -- Wow this took WAY too long to figure out.
-follow :: Bag -> [Bag] -> Int
-follow (_, []) _ = 0
-follow (_, ((cName, cCount):cs)) bags = cCount + cCount * follow childBag bags + follow ("", cs) bags
-  where childBag = findBag cName bags
-
-
-
-
-
-
+follow :: [(String, Int)] -> [Bag] -> Int
+follow [] _ = 0
+follow ((cName, cCount) : cs) bags = cCount + cCount * follow childBag bags + follow cs bags
+  where
+    childBag = fromJust $ lookup cName bags
 
 bag :: Parser Bag
 bag = do
@@ -76,7 +71,7 @@ bag = do
   token "contain"
   childColors <- (try (string "no other bags") $> []) <|> childBags
   token "."
-  return $ (c, childColors)
+  return (c, childColors)
 
 childBags :: Parser [(String, Int)]
 childBags =
