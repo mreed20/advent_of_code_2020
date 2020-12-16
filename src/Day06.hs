@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
+module Day06 where
 
 import qualified Data.Set as S
 import qualified Data.Text as T

@@ -1,17 +1,21 @@
 -- Specifically, they need you to find the two entries that sum to 2020 and then
 -- multiply those two numbers together.
 
-module Main where
+module Day01 where
 
-main :: IO ()
-main = do
-    numbers <- fileToInts "inputs/01.txt"
-    case findPairThatSumsToSomething numbers 2020 of
-      Just (x, y) -> print $ x * y
-      Nothing     -> putStrLn "oh no"
-    case findTriplet numbers 2020 of
-      Just (x, y, z) -> print $ x * y * z
-      Nothing -> putStrLn "oh no"
+import Control.Applicative (Applicative (liftA2))
+
+-- >>> solve
+-- Just (276432018,1016131)
+solve :: IO (Maybe (Int, Int))
+solve = do
+  numbers <- fileToInts "inputs/01.txt"
+  let m = uncurry (*) <$> findPairThatSumsToSomething numbers 2020
+  let n = product3 <$> findTriplet numbers 2020
+  return $ liftA2 (,) n m
+
+product3 :: Num a => (a, a, a) -> a
+product3 (x, y, z) = x * y * z
 
 findTriplet :: [Int] -> Int -> Maybe (Int, Int, Int)
 findTriplet [] _ = Nothing

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
+module Day03 where
 
 type Terrain = [String]
 
@@ -17,8 +17,8 @@ part1 t = treesEncountered $ makePath t 3
 part2 :: Terrain -> Int
 part2 t =
   let paths = map (makePath t) [1, 3, 5, 7] -- all the "down 1" paths
-      -- Right 1, down 2.
-      t' = dropEveryOtherElement t 
+  -- Right 1, down 2.
+      t' = dropEveryOtherElement t
       anotherPath = makePath t' 1
    in product . map treesEncountered $ anotherPath : paths
 
@@ -38,8 +38,9 @@ makePath t offset = go t
   where
     go [] = []
     -- add from xs the element at the given offset to the path
-    go (xs : xss) = let xss' = map (drop offset) xss
-                    in head xs : go xss'
+    go (xs : xss) =
+      let xss' = map (drop offset) xss
+       in head xs : go xss'
 
 -- cycle makes the terrain repeat to the right forever
 readTerrain :: FilePath -> IO Terrain

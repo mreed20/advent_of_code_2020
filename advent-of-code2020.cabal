@@ -11,44 +11,21 @@ maintainer:         no@one.com
 extra-source-files:
     README.md
 
-executable Day01
-    main-is:          Day01.hs
-    build-depends:    base, megaparsec
-    hs-source-dirs:   programs
-    default-language: Haskell2010
+library
+    hs-source-dirs:     src
+    exposed-modules:    Day01
+                      , Day02
+                      , Day03
+                      , Day04
+                      , Day05
+                      , Day06
+                      , Day07
 
-executable Day02
-    main-is:          Day02.hs
-    build-depends:    base, text
-    hs-source-dirs:   programs
-    default-language: Haskell2010
+    build-depends:      base
+                      , megaparsec
+                      , text
+                      , containers
+                      , parsec
 
-executable Day03
-    main-is:          Day03.hs
-    build-depends:    base
-    hs-source-dirs:   programs
-    default-language: Haskell2010
-
-executable Day04
-    main-is:          Day04.hs
-    build-depends:    base, parsec, text
-    hs-source-dirs:   programs
-    default-language: Haskell2010
-
-executable Day05
-    main-is:          Day05.hs
-    build-depends:    base, containers
-    hs-source-dirs:   programs
-    default-language: Haskell2010
-
-executable Day06
-    main-is:          Day06.hs
-    build-depends:    base, text, containers
-    hs-source-dirs:   programs
-    default-language: Haskell2010
-
-executable Day07
-    main-is:          Day07.hs
-    build-depends:    base, megaparsec, text, containers
-    hs-source-dirs:   programs
-    default-language: Haskell2010
+    default-extensions: OverloadedStrings
+    default-language:   Haskell2010

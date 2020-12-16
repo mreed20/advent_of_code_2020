@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
+module Day04 where
 
 -- This was a lot of help:
 -- http://jakewheat.github.io/intro_to_parsing/#applicative-style-parsing-code

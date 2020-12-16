@@ -1,8 +1,8 @@
-module Main where
+module Day05 where
 
-import qualified Data.Set as S
 import Control.Applicative
 import Control.Monad (guard)
+import qualified Data.Set as S
 
 -- >>> solve
 -- Just (858,557)
@@ -25,14 +25,16 @@ part2 xss = do
 
 findEmptySeats :: [Int] -> S.Set Int
 findEmptySeats actual = expected `S.difference` S.fromList actual
-  where actual' = S.fromList actual
-        low  = S.findMin actual'
-        high = S.findMax actual'
-        expected = S.fromList [low..high]
+  where
+    actual' = S.fromList actual
+    low = S.findMin actual'
+    high = S.findMax actual'
+    expected = S.fromList [low .. high]
 
 bitsToInt :: [Int] -> Int
 bitsToInt bits = sum $ zipWith (*) bits powersOfTwo
-                 where powersOfTwo = [2^x | x <- [0..]]
+  where
+    powersOfTwo = [2 ^ x | x <- [0 ..]]
 
 stringToSeatId :: String -> Maybe Int
 stringToSeatId xs = do
@@ -43,4 +45,4 @@ stringToSeatId xs = do
     f 'B' = Just 1
     f 'L' = Just 0
     f 'R' = Just 1
-    f _   = Nothing
+    f _ = Nothing

@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main where
+module Day07 where
 
+import Control.Applicative (Applicative (liftA2))
 import Data.Functor (($>))
 import Data.Graph (graphFromEdges, path)
 import Data.List (delete)
@@ -16,11 +17,10 @@ import Text.Megaparsec
     some,
     (<|>),
   )
+import qualified Text.Megaparsec as Text.Megaparsec.Error
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L (decimal, lexeme, symbol)
 import Text.Megaparsec.Error (errorBundlePretty)
-import Control.Applicative (Applicative(liftA2))
-import qualified Text.Megaparsec as Text.Megaparsec.Error
 
 type Parser = Parsec Void T.Text
 
