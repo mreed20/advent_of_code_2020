@@ -1,12 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+module Main where
+
 type Terrain = [String]
 
-main :: IO ()
-main = do
-  t <- readTerrain "input.txt"
-  putStrLn $ "part 1: " ++ show (part1 t)
-  putStrLn $ "part 2: " ++ show (part2 t)
+-- >>> solve
+-- (276,7812180000)
+solve :: IO (Int, Int)
+solve = do
+  t <- readTerrain "inputs/03.txt"
+  return (part1 t, part2 t)
 
 part1 :: Terrain -> Int
 part1 t = treesEncountered $ makePath t 3

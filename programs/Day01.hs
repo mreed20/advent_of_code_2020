@@ -1,12 +1,17 @@
 -- Specifically, they need you to find the two entries that sum to 2020 and then
 -- multiply those two numbers together.
 
+module Main where
+
 main :: IO ()
 main = do
-  numbers <- fileToInts "input"
-  case findTriplet numbers 2020 of
-    Just (x, y, z) -> print $ x * y * z
-    Nothing -> putStrLn "oh no"
+    numbers <- fileToInts "inputs/01.txt"
+    case findPairThatSumsToSomething numbers 2020 of
+      Just (x, y) -> print $ x * y
+      Nothing     -> putStrLn "oh no"
+    case findTriplet numbers 2020 of
+      Just (x, y, z) -> print $ x * y * z
+      Nothing -> putStrLn "oh no"
 
 findTriplet :: [Int] -> Int -> Maybe (Int, Int, Int)
 findTriplet [] _ = Nothing

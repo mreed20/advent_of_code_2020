@@ -1,16 +1,19 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+module Main where
+
 import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
-main :: IO ()
-main = do
-  groups <- readGroups "input.txt"
+-- >>> solve
+-- (6273,3254)
+solve :: IO (Int, Int)
+solve = do
+  groups <- readGroups "inputs/06.txt"
   let n = sum $ map groupSize groups
-  print $ "part 1: " ++ show n
   let m = sum $ map groupSize2 groups
-  print $ "part 2: " ++ show m
+  return (n, m)
 
 groupSize :: T.Text -> Int
 groupSize = S.size . S.delete '\n' . S.fromList . T.unpack

@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+module Main where
+
 -- This was a lot of help:
 -- http://jakewheat.github.io/intro_to_parsing/#applicative-style-parsing-code
 --
@@ -51,15 +53,16 @@ data LengthUnit = Cm | In deriving (Show)
 data EyeColor = Amb | Blu | Brn | Gry | Grn | Hzl | Oth
   deriving (Show)
 
-main :: IO ()
-main = do
+-- >>> solve
+-- 184
+solve :: IO Int
+solve = do
   -- Read each passport's text contents onto its own line.
-  ss <- readLines "input.txt"
+  ss <- readLines "inputs/04.txt"
   -- Parse every passport, keeping only those which parsed correctly.
   let passports = rights $ map (P.parse passport "") ss
   let n = length passports
-  -- Print the number of parsed passports
-  putStrLn $ "part 2: " ++ show n
+  return n
 
 -- Parse a passport.
 passport :: Parser Passport

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Day7 where
+module Main where
 
 import Data.Functor (($>))
 import Data.Graph (graphFromEdges, path)
@@ -19,24 +19,27 @@ import Text.Megaparsec
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L (decimal, lexeme, symbol)
 import Text.Megaparsec.Error (errorBundlePretty)
+import Control.Applicative (Applicative(liftA2))
+import qualified Text.Megaparsec as Text.Megaparsec.Error
 
 type Parser = Parsec Void T.Text
 
 -- A Bag has a color and a list of bag names (and their quantity) it can contain.
 type Bag = (T.Text, [(T.Text, Int)])
 
-main :: IO ()
-main = do
-  input <- T.readFile "input.txt"
+-- >>> solve
+solve :: IO (Either (Text.Megaparsec.Error.ParseErrorBundle T.Text Void) (Int, Maybe Int))
+solve = do
+  input <- T.readFile "inputs/07.txt"
   -- Finally, I found a good use for mapM! this results
   -- in bags having the type `Either ParseError [Bag]`,
   -- whereas with `map` the type is `[Either ParseError Bag]`.
-  case parse bags "" input of
-    Left x ->
-      putStrLn . errorBundlePretty $ x
+  return $ case parse bags "" input of
+    Left x -> Left x
     Right bags -> do
-      putStrLn $ "part 1: " ++ show (part1 bags)
-      putStrLn $ "part 2: " ++ show (part2 bags)
+      let m = part1 bags
+      let n = part2 bags
+      Right (m, n)
 
 -- represent the bags as a directed graph
 part1 :: [Bag] -> Int

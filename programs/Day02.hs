@@ -1,5 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
+module Main where
+
 import qualified Data.Text.IO as T
 import qualified Data.Text as T
 
@@ -17,13 +19,14 @@ data PasswordPolicy = PasswordPolicy {
 data PasswordEntry = PasswordEntry PasswordPolicy Password
 
 
-main :: IO ()
-main = do
-  entries <- readPasswordEntries "input.txt"
-  let l1 = length . filter validPasswordPart1 $ entries
-  putStrLn $ "part 1: " ++ show l1
-  let l2 = length . filter validPasswordPart2 $ entries
-  putStrLn $ "part 2: " ++ show l2
+-- >>> solve
+-- (580,611)
+solve :: IO (Int, Int)
+solve = do
+  entries <- readPasswordEntries "inputs/02.txt"
+  let p1 = length . filter validPasswordPart1 $ entries
+  let p2 = length . filter validPasswordPart2 $ entries
+  return (p1, p2)
 
 validPasswordPart1 :: PasswordEntry -> Bool
 validPasswordPart1 (PasswordEntry (PasswordPolicy min max c) password) =
