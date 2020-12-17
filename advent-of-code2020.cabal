@@ -20,12 +20,15 @@ library
                       , Day05
                       , Day06
                       , Day07
+                      , Day08
 
     build-depends:      base
                       , megaparsec
                       , text
                       , containers
                       , parsec
+                      , array
+                      , mtl
 
     default-extensions: OverloadedStrings
     default-language:   Haskell2010
