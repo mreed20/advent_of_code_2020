@@ -33,15 +33,13 @@ data Instr = Nop | Acc Int | Jmp Int
 -- Type of state used in the evaluator function.
 data EvalState = EvalState
   { getII :: Int, -- instruction index (like an instruction pointer)
-    getAcc :: Int, -- accumulator value
-    getExecuted :: [Int] -- list of instructions executed so far
+    getAcc :: Int -- accumulator value
   }
 
 -- Create an EvalState where the instruction index points to
--- the first instruction, the accumulator is set to 0, and the
--- list of instructions executed so far is empty.
+-- the first instruction and the accumulator is set to 0.
 mkEvalState :: EvalState
-mkEvalState = EvalState 0 0 []
+mkEvalState = EvalState 0 0
 
 -- >>> solve
 -- "1563"
@@ -55,29 +53,26 @@ solve = do
        in show $ part1 arr
 
 part1 :: Array Int Instr -> Int
-part1 instrs = getAcc $ eval instrs mkEvalState
+part1 instrs = getAcc $ eval instrs mkEvalState S.empty
 
--- Evaluate the sequence of instructions, stopping before
--- we evaluate an instruction twice.
--- eval :: Array Int Instr -> State EvalState ()
-eval :: Array Int Instr -> EvalState -> EvalState
-eval instrs s@(EvalState ii acc executed)
+-- Evaluate the sequence of instructions, returning the last
+-- EvalState before we evaluate any instruction twice.
+eval :: Array Int Instr -> EvalState -> S.Set Int -> EvalState
+eval instrs s@(EvalState ii acc) executed
   -- Only keep going if the instruction has not been executed already.
   | ii `elem` executed = s
   | otherwise =
-    let modifyII f s = s {getII = f (getII s)}
-        modifyAcc f s = s {getAcc = f (getAcc s)}
-        modifyExecuted f s = s {getExecuted = f (getExecuted s)}
-        -- determine the next state
+    let -- determine the next state
         s' = case instrs ! ii of
           -- Increment the instruction index by one.
-          Nop -> modifyII (+ 1) s
+          Nop -> s {getII = ii + 1}
           -- Increment the instruction index by one
           -- and the accumulator by the given amount
-          Acc inc -> modifyII (+ 1) . modifyAcc (+ inc) $ s
+          Acc inc -> EvalState (ii + 1) (acc + inc)
           -- Add off to instruction index.
-          Jmp off -> modifyII (+ off) s
-     in eval instrs (modifyExecuted (ii :) s')
+          Jmp off -> s {getII = ii + off}
+        executed' = ii `S.insert` executed
+     in eval instrs s' executed'
 
 {-
 -- parsers
