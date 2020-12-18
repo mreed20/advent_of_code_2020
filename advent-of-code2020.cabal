@@ -29,6 +29,7 @@ library
                       , parsec
                       , array
                       , mtl
+                      , lens
 
     default-extensions: OverloadedStrings
     default-language:   Haskell2010

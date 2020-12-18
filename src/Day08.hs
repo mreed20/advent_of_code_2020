@@ -6,6 +6,7 @@ module Day08 where
 import Control.Monad.State.Strict
 import Data.Array.IArray
 import Data.Functor (($>))
+import Control.Lens
 import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
@@ -23,11 +24,14 @@ import qualified Text.Megaparsec as Text.Megaparsec.Error
 import qualified Text.Megaparsec.Char as C
 import qualified Text.Megaparsec.Char.Lexer as L (decimal, lexeme, symbol)
 import Text.Megaparsec.Error (errorBundlePretty)
+import Control.Applicative
+import Data.List (findIndices)
+import Data.Either (rights)
 
 type Parser = Parsec Void T.Text
 
 -- Instruction to use in the evaluator.
-data Instr = Nop | Acc Int | Jmp Int
+data Instr = Nop Int | Acc Int | Jmp Int
   deriving (Show, Eq, Ord)
 
 -- Type of state used in the evaluator function.
@@ -42,30 +46,53 @@ mkEvalState :: EvalState
 mkEvalState = EvalState 0 0
 
 -- >>> solve
--- "1563"
+-- "(Left 1563,[767])"
 solve :: IO String
 solve = do
   input <- T.readFile "inputs/08.txt"
   return $ case parse instrs "" input of
     Left bundle -> errorBundlePretty bundle
-    Right xs ->
-      let arr = listArray (0, length xs - 1) xs
-       in show $ part1 arr
+    Right xs -> show (part1 xs, part2 xs)
 
-part1 :: Array Int Instr -> Int
-part1 instrs = getAcc $ eval instrs mkEvalState S.empty
+part1 :: [Instr] -> Either Int Int
+part1 instrs = eval instrs mkEvalState S.empty
 
--- Evaluate the sequence of instructions, returning the last
--- EvalState before we evaluate any instruction twice.
-eval :: Array Int Instr -> EvalState -> S.Set Int -> EvalState
+-- Fixing the program involves swapping one nop for a jmp.
+-- We first make a list of all instruction sequences, one
+-- for every possible nop/jmp swap, then we run eval on
+-- each sequence.
+part2 :: [Instr] -> [Int]
+part2 instrs = let instrss = permuteInstructions instrs
+                   results = map (\is -> eval is mkEvalState S.empty) instrss
+                in rights results
+                   
+
+permuteInstructions :: [Instr] -> [[Instr]]
+permuteInstructions instrs = let is = findIndices canSwap instrs
+                              in map (\ i -> over (element i) swap instrs) is
+  where
+    -- we can only swap nop and jmp
+    canSwap (Nop _) = True
+    canSwap (Jmp _) = True
+    canSwap _       = False
+    -- does the actual swapping
+    swap (Nop x) = Jmp x
+    swap (Jmp x) = Nop x
+
+-- Evaluate the sequence of instructions. If we encounter
+-- an infinite loop, return the Left of the last EvalState.
+-- Otherwise return a Right containing the last accumulator value.
+eval :: [Instr] -> EvalState -> S.Set Int -> Either Int Int
 eval instrs s@(EvalState ii acc) executed
+  -- We've reached the last instruction.
+  | ii == length instrs - 1 = Right acc
   -- Only keep going if the instruction has not been executed already.
-  | ii `elem` executed = s
+  | ii `elem` executed = Left acc
   | otherwise =
     let -- determine the next state
-        s' = case instrs ! ii of
+        s' = case instrs !! ii of
           -- Increment the instruction index by one.
-          Nop -> s {getII = ii + 1}
+          Nop _ -> s {getII = ii + 1}
           -- Increment the instruction index by one
           -- and the accumulator by the given amount
           Acc inc -> EvalState (ii + 1) (acc + inc)
@@ -85,7 +112,7 @@ instr :: Parser Instr
 instr = nop <|> acc <|> jmp
 
 nop :: Parser Instr
-nop = (string "nop" *> offset) $> Nop
+nop = string "nop" *> (Nop <$> offset)
 
 acc :: Parser Instr
 acc = string "acc" *> (Acc <$> offset)
