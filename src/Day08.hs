@@ -3,30 +3,19 @@
 
 module Day08 where
 
-import Control.Monad.State.Strict
-import Data.Array.IArray
+import Control.Applicative (Alternative ((<|>)))
+import Data.Either (rights)
 import Data.Functor (($>))
-import Control.Lens
 import qualified Data.Set as S
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import Data.Void (Void)
 import Text.Megaparsec
-  ( MonadParsec (try),
-    Parsec,
-    errorBundlePretty,
-    parse,
-    sepBy,
-    some,
-    (<|>),
-  )
-import qualified Text.Megaparsec as Text.Megaparsec.Error
+    ( (<|>), Parsec, parse, errorBundlePretty, sepBy )
 import qualified Text.Megaparsec.Char as C
-import qualified Text.Megaparsec.Char.Lexer as L (decimal, lexeme, symbol)
-import Text.Megaparsec.Error (errorBundlePretty)
-import Control.Applicative
-import Data.List (findIndices)
-import Data.Either (rights)
+import qualified Text.Megaparsec.Char.Lexer as L
+import qualified Data.Sequence as Seq
+import Data.Foldable (Foldable(toList))
 
 type Parser = Parsec Void T.Text
 
@@ -54,35 +43,36 @@ solve = do
     Left bundle -> errorBundlePretty bundle
     Right xs -> show (part1 xs, part2 xs)
 
-part1 :: [Instr] -> Either Int Int
+part1 :: Seq.Seq Instr -> Either Int Int
 part1 instrs = eval instrs mkEvalState S.empty
 
 -- Fixing the program involves swapping one nop for a jmp.
 -- We first make a list of all instruction sequences, one
 -- for every possible nop/jmp swap, then we run eval on
 -- each sequence.
-part2 :: [Instr] -> [Int]
-part2 instrs = let instrss = permuteInstructions instrs
-                   results = map (\is -> eval is mkEvalState S.empty) instrss
-                in rights results
-                   
+part2 :: Seq.Seq Instr -> [Int]
+part2 instrs =
+  let instrss = permuteInstructions instrs
+      results = fmap (\is -> eval is mkEvalState S.empty) instrss
+   in rights . toList $ results
 
-permuteInstructions :: [Instr] -> [[Instr]]
-permuteInstructions instrs = let is = findIndices canSwap instrs
-                              in map (\ i -> over (element i) swap instrs) is
-  where
-    -- we can only swap nop and jmp
-    canSwap (Nop _) = True
-    canSwap (Jmp _) = True
-    canSwap _       = False
-    -- does the actual swapping
-    swap (Nop x) = Jmp x
-    swap (Jmp x) = Nop x
+permuteInstructions :: Seq.Seq Instr -> Seq.Seq (Seq.Seq Instr)
+permuteInstructions instrs =
+  let -- we can only swap nop and jmp
+      canSwap (Nop _) = True
+      canSwap (Jmp _) = True
+      canSwap _ = False
+      -- does the actual swapping
+      swap (Nop x) = Jmp x
+      swap (Jmp x) = Nop x
+      is = Seq.fromList $ Seq.findIndicesL canSwap instrs
+   in -- swap the ith instruction
+      fmap (\i -> Seq.adjust swap i instrs) is
 
 -- Evaluate the sequence of instructions. If we encounter
 -- an infinite loop, return the Left of the last EvalState.
 -- Otherwise return a Right containing the last accumulator value.
-eval :: [Instr] -> EvalState -> S.Set Int -> Either Int Int
+eval :: Seq.Seq Instr -> EvalState -> S.Set Int -> Either Int Int
 eval instrs s@(EvalState ii acc) executed
   -- We've reached the last instruction.
   | ii == length instrs - 1 = Right acc
@@ -90,7 +80,7 @@ eval instrs s@(EvalState ii acc) executed
   | ii `elem` executed = Left acc
   | otherwise =
     let -- determine the next state
-        s' = case instrs !! ii of
+        s' = case instrs `Seq.index` ii of
           -- Increment the instruction index by one.
           Nop _ -> s {getII = ii + 1}
           -- Increment the instruction index by one
@@ -105,8 +95,8 @@ eval instrs s@(EvalState ii acc) executed
 -- parsers
 -}
 
-instrs :: Parser [Instr]
-instrs = instr `sepBy` C.newline
+instrs :: Parser (Seq.Seq Instr)
+instrs = Seq.fromList <$> (instr `sepBy` C.newline)
 
 instr :: Parser Instr
 instr = nop <|> acc <|> jmp
