@@ -27,13 +27,16 @@ import Prelude hiding (drop, filter, length, reverse, take)
 type Parser = Parsec Void T.Text
 
 -- >>> solve
--- "530627549"
+-- "(530627549,Nothing)"
 solve :: IO String
 solve = do
   input <- T.readFile "inputs/09.txt"
   return $ case parse integers "" input of
     Left bundle -> errorBundlePretty bundle
-    Right xs -> show $ part1 xs
+    Right xs ->
+      let n = part1 xs
+       in -- the answer to part 1 is used in part 2
+          show (n, part2 xs n)
 
 part1 :: Seq Int -> Int
 part1 xs =
@@ -42,24 +45,24 @@ part1 xs =
       ((_ :|> y) :<| _) = filter (not . hasProperty) groups
    in y
 
--- >>> groupings 3 (fromList [1,2,3,4,5,6] :: Seq Int)
--- fromList [fromList [1,2,3],fromList [2,3,4],fromList [3,4,5],fromList [4,5,6]]
+-- Find a contiguous set of at least two numbers in xs which sum to n.
+part2 :: Seq Int -> Int -> Maybe (Seq Int)
+part2 xs n = go xs
+  where
+    go a@((y1 :<| ys) :|> y2)
+      | sum a == n = Just a
+      | sum a - y2 < n = go (ys :|> y2)
+    go _ = Nothing
+
+-- >>> let x = groupings 3 (fromList [1,2,3,4,5,6,7,8,9] :: Seq Int) in (Data.Sequence.length x, x)
+-- (7,fromList [fromList [1,2,3],fromList [2,3,4],fromList [3,4,5],fromList [4,5,6],fromList [5,6,7],fromList [6,7,8],fromList [7,8,9]])
+-- >>> let x = groupings 3 (fromList [1,2,3,4,5,6,7,8,9] :: Seq Int) in (Data.Sequence.length x, x)
+-- (7,fromList [fromList [1,2,3],fromList [2,3,4],fromList [3,4,5],fromList [4,5,6],fromList [5,6,7],fromList [6,7,8],fromList [7,8,9]])
 groupings ::
   Int {- length of preamble -} ->
   Seq Int {- sequence of numbers -} ->
   Seq (Seq Int)
-groupings n =
-  inits
-    >>> toList
-    >>> mapMaybe (takeFromEnd n)
-    >>> fromList
-
-takeFromEnd :: Int -> Seq a -> Maybe (Seq a)
-takeFromEnd n s
-  | i < 0 = Nothing
-  | otherwise = Just $ drop i s
-  where
-    i = length s - n
+groupings n seq = fromList [take n (drop i seq) | i <- [0 .. length seq - n]]
 
 findPairSum :: Seq Int -> Int -> Bool
 findPairSum [] _ = False
