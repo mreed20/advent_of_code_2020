@@ -54,15 +54,15 @@ part2 xs n = go xs
       | sum a - y2 < n = go (ys :|> y2)
     go _ = Nothing
 
--- >>> let x = groupings 3 (fromList [1,2,3,4,5,6,7,8,9] :: Seq Int) in (Data.Sequence.length x, x)
--- (7,fromList [fromList [1,2,3],fromList [2,3,4],fromList [3,4,5],fromList [4,5,6],fromList [5,6,7],fromList [6,7,8],fromList [7,8,9]])
--- >>> let x = groupings 3 (fromList [1,2,3,4,5,6,7,8,9] :: Seq Int) in (Data.Sequence.length x, x)
--- (7,fromList [fromList [1,2,3],fromList [2,3,4],fromList [3,4,5],fromList [4,5,6],fromList [5,6,7],fromList [6,7,8],fromList [7,8,9]])
+-- >>> groupings 3 (fromList [1..10])
+-- fromList [fromList [1,2,3],fromList [2,3,4],fromList [3,4,5],fromList [4,5,6],fromList [5,6,7],fromList [6,7,8],fromList [7,8,9]]
+-- >>> groupings 1 (fromList [1..10])
+-- fromList [fromList [1],fromList [2],fromList [3],fromList [4],fromList [5],fromList [6],fromList [7],fromList [8],fromList [9],fromList [10]]
 groupings ::
   Int {- length of preamble -} ->
   Seq Int {- sequence of numbers -} ->
   Seq (Seq Int)
-groupings n seq = fromList [take n (drop i seq) | i <- [0 .. length seq - n]]
+groupings n seq = fromFunction (length seq - n + 1) (\i -> take n (drop i seq))
 
 findPairSum :: Seq Int -> Int -> Bool
 findPairSum [] _ = False
