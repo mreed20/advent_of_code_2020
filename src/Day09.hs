@@ -27,7 +27,7 @@ import Prelude hiding (drop, filter, length, reverse, take)
 type Parser = Parsec Void T.Text
 
 -- >>> solve
--- "(530627549,Nothing)"
+-- "(530627549,fromList [77730285])"
 solve :: IO String
 solve = do
   input <- T.readFile "inputs/09.txt"
@@ -36,7 +36,7 @@ solve = do
     Right xs ->
       let n = part1 xs
        in -- the answer to part 1 is used in part 2
-          show (n, part2 xs n)
+          show (n, part2 n xs)
 
 part1 :: Seq Int -> Int
 part1 xs =
@@ -46,13 +46,31 @@ part1 xs =
    in y
 
 -- Find a contiguous set of at least two numbers in xs which sum to n.
-part2 :: Seq Int -> Int -> Maybe (Seq Int)
-part2 xs n = go xs
-  where
-    go a@((y1 :<| ys) :|> y2)
-      | sum a == n = Just a
-      | sum a - y2 < n = go (ys :|> y2)
-    go _ = Nothing
+-- Note that this is very slow :)
+part2 :: Int -> Seq Int -> Seq Int
+part2 n = 
+  contiguousSubsequences
+  >>> filter (\xs -> length xs >= 2)
+  >>> filter (\xs -> sum xs == n)
+  >>> fmap (\xs -> minimum xs + maximum xs)
+
+-- >>> contiguousSubsequences [1..4]
+-- fromList [fromList [1],fromList [1,2],fromList [1,2,3],fromList [1,2,3,4],fromList [2],fromList [2,3],fromList [2,3,4],fromList [3],fromList [3,4],fromList [4]]
+contiguousSubsequences :: Seq Int -> Seq (Seq Int)
+contiguousSubsequences xs =
+  let n = length xs
+   in fromList
+        [ take (b - a + 1) (drop a xs)
+          | a <- [0 .. n - 1],
+            b <- [a .. n - 1]
+        ]
+
+{-
+there are no negative numbers in the sequence
+we must find a contiguous range of at least 2 numbers that sums to n
+- then we return the min and max in the range (which is not necessarily
+  the smallest and largest index)
+-}
 
 -- >>> groupings 3 (fromList [1..10])
 -- fromList [fromList [1,2,3],fromList [2,3,4],fromList [3,4,5],fromList [4,5,6],fromList [5,6,7],fromList [6,7,8],fromList [7,8,9]]
